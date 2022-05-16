@@ -9,7 +9,7 @@ fn main() {
 }
 
 #[derive(Serialize, Deserialize)]
-struct autorun {
+struct Autorun {
     keyname: String,
     keyvalue: String
 }
@@ -21,7 +21,7 @@ fn autorun_programs() -> io::Result<std::string::String> {
         let mut autorun_output = vec![];
 
         for (name, value) in set_as_run.enum_values().map(|x| x.unwrap()) {
-            let value = autorun {
+            let value = Autorun {
                 keyname: name,
                 keyvalue: value.to_string()
             };
