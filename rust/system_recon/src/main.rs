@@ -1,8 +1,8 @@
 // TODO:
 // 1. Implment windows registry user match
 // 2. Get number of actual users
-// 4. Get execution policy
-// 5. Get network adapters
+// 3. Get execution policy
+// 4. Get network adapters
 
 use winreg::enums::*;
 use winreg::RegKey;
