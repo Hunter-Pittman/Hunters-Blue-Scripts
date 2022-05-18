@@ -1,1 +1,0 @@
-C:\Users\hunte\Documents\Hunters-BlueTeam-Tools\Hunters-Blue-Scripts\rust\registry_checker\target\debug\registry_checker.exe: C:\Users\hunte\Documents\Hunters-BlueTeam-Tools\Hunters-Blue-Scripts\rust\registry_checker\src\main.rs

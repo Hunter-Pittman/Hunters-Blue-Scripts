@@ -23,7 +23,7 @@ struct ComputerInfo {
 
 }
 
-fn overall_info() -> std::string::String {
+fn overall_info() -> String {
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion").unwrap();
     let active_computer_name = hklm.open_subkey("SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName").unwrap();
@@ -56,7 +56,31 @@ fn overall_info() -> std::string::String {
     return info_json
 }
 
+#[derive(Serialize, Deserialize)]
+struct Autorun {
+    keyname: String,
+    keyvalue: String
+}
 
+fn autorun_programs() -> String {
+    let set_as_run = RegKey::predef(HKEY_LOCAL_MACHINE)
+        .open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run").unwrap();
+
+    let mut autorun_output = vec![];
+
+    for (name, value) in set_as_run.enum_values().map(|x| x.unwrap()) {
+        let value = Autorun {
+            keyname: name,
+            keyvalue: value.to_string()
+        };
+
+        autorun_output.push(value)
+    }
+
+    let autorun_json = serde_json::to_string_pretty(&autorun_output).unwrap();
+
+    return autorun_json
+}
 
 fn user_info() {
 
