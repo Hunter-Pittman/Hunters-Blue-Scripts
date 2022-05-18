@@ -1,16 +1,19 @@
 // TODO:
-// 1. Implment windows registry user match
-// 2. Get number of actual users
-// 3. Get execution policy
-// 4. Get network adapters
+// 1. Get process dump
+// 2. Command analysis
 
+use std::fmt::Debug;
 use winreg::enums::*;
 use winreg::RegKey;
 use serde::{Serialize, Deserialize};
+use sysinfo::*;
+
 
 fn main() {
-    let x = overall_info();
-    println!("{}", x)
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    println!("{}", network_info(sys));
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,10 +85,66 @@ fn autorun_programs() -> String {
     return autorun_json
 }
 
-fn user_info() {
+#[derive(Serialize, Deserialize)]
+struct User {
+    uid: u32,
+    gid: u32,
+    name: String,
+    groups: Vec<String>
+}
+
+
+fn user_info(sys: System) -> String {
+
+    let mut users = vec![];
+
+    for user in sys.users() {
+        let value = User {
+            uid: *user.uid(),
+            gid: *user.gid(),
+            name: user.name().to_string(),
+            groups: Vec::from(user.groups()),
+        };
+
+        users.push(value);
+    }
+
+    let users_json = serde_json::to_string_pretty(&users).unwrap();
+
+    return users_json
 
 }
 
-fn network_info() {
+#[derive(Serialize, Deserialize)]
+struct NetworkInterface {
+    interface_name: String,
+    total_transmitted_packets: u64
+}
+
+
+fn network_info(sys: System) -> String {
+    let networks = sys.networks();
+
+    let mut network_interfaces = vec![];
+
+    for (interface_name, data) in networks {
+        let value = NetworkInterface {
+            interface_name: interface_name.to_string(),
+            total_transmitted_packets: data.total_packets_transmitted()
+        };
+
+        network_interfaces.push(value);
+    }
+
+    let network_interfaces_json = serde_json::to_string_pretty(&network_interfaces).unwrap();
+
+    return network_interfaces_json
+}
+
+fn process_dump() -> String {
+
+}
+
+fn command_analysis() -> String {
 
 }
