@@ -1,11 +1,11 @@
 // TODO:
 // 1. Get process dump
-// 2. Command analysis
 
 use std::fmt::Debug;
 use winreg::enums::*;
 use winreg::RegKey;
 use serde::{Serialize, Deserialize};
+use serde_json::json_internal_vec;
 use sysinfo::*;
 
 
@@ -13,7 +13,7 @@ fn main() {
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    println!("{}", network_info(sys));
+    process_info(sys);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -141,10 +141,34 @@ fn network_info(sys: System) -> String {
     return network_interfaces_json
 }
 
-fn process_dump() -> String {
+
+#[derive(Serialize, Deserialize)]
+struct Process {
+    pid: u32,
+    parent_process: u32,
+    name: String,
+    command: Vec<String>
 
 }
 
-fn command_analysis() -> String {
+fn process_info(sys: System) -> String {
+    let processes = sys.processes();
+
+    let mut process_dump = vec![];
+
+    for (pid, process_data) in processes {
+        let value = Process {
+            pid: pid.as_u32(),
+            parent_process: process_data.parent().unwrap().as_u32(),
+            name: process_data.name().to_string(),
+            command: process_data.cmd().to_vec()
+        };
+        process_dump.push(value);
+    }
+
+    let process_dump_json = serde_json::to_string_pretty(&process_dump).unwrap();
+
+    return process_dump_json
+
 
 }
