@@ -13,10 +13,10 @@ fn main() {
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    //println!("{}", overall_info());
-    //println!("{}", autorun_programs());
-    //println!("{}", network_info(&sys));
-    //println!("{}", user_info(&sys));
+    println!("{}", overall_info());
+    println!("{}", autorun_programs());
+    println!("{}", network_info(&sys));
+    println!("{}", user_info(&sys));
     println!("{}", process_info(&sys));
 }
 
