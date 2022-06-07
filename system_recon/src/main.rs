@@ -1,7 +1,5 @@
 // TODO:
-// 1. Get process dump
-// 2. Add params to execution
-
+// DONE!
 
 use std::fmt::Debug;
 use winreg::enums::*;
@@ -10,11 +8,16 @@ use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
 
+
 fn main() {
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    process_info(sys);
+    //println!("{}", overall_info());
+    //println!("{}", autorun_programs());
+    //println!("{}", network_info(&sys));
+    //println!("{}", user_info(&sys));
+    println!("{}", process_info(&sys));
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,6 +61,7 @@ fn overall_info() -> String {
     let info_json = serde_json::to_string_pretty(&info).unwrap();
 
     return info_json
+
 }
 
 #[derive(Serialize, Deserialize)]
@@ -95,7 +99,7 @@ struct User {
 }
 
 
-fn user_info(sys: System) -> String {
+fn user_info(sys: &System) -> String {
 
     let mut users = vec![];
 
@@ -123,7 +127,7 @@ struct NetworkInterface {
 }
 
 
-fn network_info(sys: System) -> String {
+fn network_info(sys: &System) -> String {
     let networks = sys.networks();
 
     let mut network_interfaces = vec![];
@@ -152,7 +156,7 @@ struct Process {
 
 }
 
-fn process_info(sys: System) -> String {
+fn process_info(sys: &System) -> String {
     let processes = sys.processes();
 
     let mut process_dump = vec![];
@@ -160,7 +164,10 @@ fn process_info(sys: System) -> String {
     for (pid, process_data) in processes {
         let value = Process {
             pid: pid.as_u32(),
-            parent_process: process_data.parent().unwrap().as_u32(),
+            parent_process: match process_data.parent() {
+                None => 0,
+                Some(ppid) => ppid.as_u32()
+            },
             name: process_data.name().to_string(),
             command: process_data.cmd().to_vec()
         };
