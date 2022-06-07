@@ -1,5 +1,7 @@
 // TODO:
 // 1. Get process dump
+// 2. Add params to execution
+
 
 use std::fmt::Debug;
 use winreg::enums::*;
@@ -7,7 +9,6 @@ use winreg::RegKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
-
 
 fn main() {
     let mut sys = System::new_all();
