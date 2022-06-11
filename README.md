@@ -1,2 +1,2 @@
 # Blue Team Scripts
-This repo is for me to write some blue team oriented scripts that go well together. Additonally, I am using this repo to get familar with Rust again so even though there are some things probably easier done in PowerShell there may be a Rust version as well.
+This repo is for me to write some blue team oriented scripts that go well together. Additonally, I am using this repo to get familar with Rust again so even though there are some things probably easier done in PowerShell there may be a Rust version as well. You may also notice that my sctipts are outputting data directly to terminal via println() this is by design and is done this way to integrate with a seperate project.
