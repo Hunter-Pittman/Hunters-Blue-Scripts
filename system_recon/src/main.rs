@@ -7,9 +7,7 @@ use winreg::RegKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
-use clap::Parser;
-use clap::Command;
-use clap::Arg;
+use clap::{Parser, Command, Arg};
 
 
 
