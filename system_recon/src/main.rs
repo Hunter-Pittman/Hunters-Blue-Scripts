@@ -7,17 +7,66 @@ use winreg::RegKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
+use clap::Parser;
+use clap::Command;
+use clap::Arg;
+
+
 
 
 fn main() {
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    println!("{}", overall_info());
-    println!("{}", autorun_programs());
-    println!("{}", network_info(&sys));
-    println!("{}", user_info(&sys));
-    println!("{}", process_info(&sys));
+    let matches = Command::new("system_recon")
+    .arg(Arg::new("overall")
+        .long("overall")
+        .short('o')
+        .required(false)
+        .takes_value(false))
+    .arg(Arg::new("autorun")
+        .long("autorun")
+        .short('a')
+        .required(false)
+        .takes_value(false))
+    .arg(Arg::new("network")
+        .long("network")
+        .short('n')
+        .required(false)
+        .takes_value(false))
+    .arg(Arg::new("users")
+        .long("users")
+        .short('u')
+        .required(false)
+        .takes_value(false))
+    .arg(Arg::new("processes")
+        .long("processes")
+        .short('p')
+        .required(false)
+        .takes_value(false))
+    .get_matches();
+
+
+    if  matches.is_present("overall") {
+        println!("{}", overall_info());
+    } 
+    
+    if matches.is_present("autorun") {
+        println!("{}", autorun_programs());
+    }
+
+    if matches.is_present("network") {
+        println!("{}", network_info(&sys));
+    }
+
+    if matches.is_present("users") {
+        println!("{}", user_info(&sys));
+    }
+
+    if matches.is_present("users") {
+        println!("{}", process_info(&sys));
+    }
+
 }
 
 #[derive(Serialize, Deserialize)]
