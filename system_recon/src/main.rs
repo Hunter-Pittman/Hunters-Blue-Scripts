@@ -1,13 +1,12 @@
 // TODO:
 // DONE!
 
-use std::fmt::Debug;
 use winreg::enums::*;
 use winreg::RegKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
-use clap::{Parser, Command, Arg};
+use clap::{Command, Arg};
 
 
 
@@ -17,31 +16,38 @@ fn main() {
     sys.refresh_all();
 
     let matches = Command::new("system_recon")
+    .author("By: Hunter Pittman")
+    .about("This script pulls basic recon information from a target system and outputs it in a way a another related tool can parse")
     .arg(Arg::new("overall")
         .long("overall")
         .short('o')
         .required(false)
-        .takes_value(false))
+        .takes_value(false)
+        .help("Displays general info about the system"))
     .arg(Arg::new("autorun")
         .long("autorun")
         .short('a')
         .required(false)
-        .takes_value(false))
+        .takes_value(false)
+        .help("Lists all autorunning programs on the system"))
     .arg(Arg::new("network")
         .long("network")
         .short('n')
         .required(false)
-        .takes_value(false))
+        .takes_value(false)
+        .help("Lists all network adapters and transfer totals"))
     .arg(Arg::new("users")
         .long("users")
         .short('u')
         .required(false)
-        .takes_value(false))
+        .takes_value(false)
+        .help("Lists all users and groups on the system"))
     .arg(Arg::new("processes")
         .long("processes")
         .short('p')
         .required(false)
-        .takes_value(false))
+        .takes_value(false)
+        .help("Dumps a list of processes on the system"))
     .get_matches();
 
 
