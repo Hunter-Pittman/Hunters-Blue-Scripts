@@ -4,12 +4,11 @@
 use winreg::enums::*;
 use winreg::RegKey;
 use serde::{Serialize, Deserialize};
+use serde_xml_rs::{from_str, to_string};
 use serde_json::json_internal_vec;
 use sysinfo::*;
 use clap::{Command, Arg};
-use winapi::um::iphlpapi;
-use execute::Execute;
-use std::process::Command as process_command;
+use create_process_w::Command as process_command;
 
 
 
@@ -120,28 +119,23 @@ fn overall_info() -> String {
 
 }
 
-fn autorun_programs() -> std::process::Output{
-    const SYSINTERNALS_PATH: &str = "C:\\Users\\hunte\\Downloads\\SysinternalsSuite\\Autorunsc64.exe";
-
-    let mut my_command = process_command::new(SYSINTERNALS_PATH);
+fn autorun_programs() -> String {
+    const SYSINTERNALS_EXE: &str = "C:\\Users\\hunte\\Documents\\SysinternalsSuite\\Autorunsc64.exe  -nobanner -accepteula -a *";
 
     //my_command.args(["-nobanner", "/accepteula", "-a *", "-c", "-h", "-s", "-v", "-vt", "*"]);
     // "-a *" seems to be broken when using command library. May need to use the CreateProcessW from WinAPI
-    my_command.args(["-nobanner", "/accepteula", "-a *"]);
 
-    let output = my_command.execute_output().unwrap();
+    let status = process_command::new(SYSINTERNALS_EXE)
+        .inherit_handles(true)
+        .status().expect("notepad failed to start");
 
-    if let Some(exit_code) = output.status.code() {
-        if exit_code == 0 {
-            println!("Ok.");
+        if status.success() {
+            println!("Success!")
         } else {
-            eprintln!("Failed.");
+            println!("Process exited with status {}", status.code())
         }
-    } else {
-        eprintln!("Interrupted!");
-    }
 
-    return output
+    return "Bruh".to_string()
 }
 
 #[derive(Serialize, Deserialize)]
