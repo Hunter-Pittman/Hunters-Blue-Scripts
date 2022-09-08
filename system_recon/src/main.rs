@@ -7,6 +7,9 @@ use serde::{Serialize, Deserialize};
 use serde_json::json_internal_vec;
 use sysinfo::*;
 use clap::{Command, Arg};
+use winapi::um::iphlpapi;
+use execute::Execute;
+use std::process::Command as process_command;
 
 
 
@@ -56,11 +59,11 @@ fn main() {
     } 
     
     if matches.is_present("autorun") {
-        println!("{}", autorun_programs());
+        println!("{:?}", autorun_programs());
     }
 
     if matches.is_present("network") {
-        println!("{}", network_info(&sys));
+        println!("{}", adapter_info(&sys));
     }
 
     if matches.is_present("users") {
@@ -117,30 +120,28 @@ fn overall_info() -> String {
 
 }
 
-#[derive(Serialize, Deserialize)]
-struct Autorun {
-    keyname: String,
-    keyvalue: String
-}
+fn autorun_programs() -> std::process::Output{
+    const SYSINTERNALS_PATH: &str = "C:\\Users\\hunte\\Downloads\\SysinternalsSuite\\Autorunsc64.exe";
 
-fn autorun_programs() -> String {
-    let set_as_run = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run").unwrap();
+    let mut my_command = process_command::new(SYSINTERNALS_PATH);
 
-    let mut autorun_output = vec![];
+    //my_command.args(["-nobanner", "/accepteula", "-a *", "-c", "-h", "-s", "-v", "-vt", "*"]);
+    // "-a *" seems to be broken when using command library. May need to use the CreateProcessW from WinAPI
+    my_command.args(["-nobanner", "/accepteula", "-a *"]);
 
-    for (name, value) in set_as_run.enum_values().map(|x| x.unwrap()) {
-        let value = Autorun {
-            keyname: name,
-            keyvalue: value.to_string()
-        };
+    let output = my_command.execute_output().unwrap();
 
-        autorun_output.push(value)
+    if let Some(exit_code) = output.status.code() {
+        if exit_code == 0 {
+            println!("Ok.");
+        } else {
+            eprintln!("Failed.");
+        }
+    } else {
+        eprintln!("Interrupted!");
     }
 
-    let autorun_json = serde_json::to_string_pretty(&autorun_output).unwrap();
-
-    return autorun_json
+    return output
 }
 
 #[derive(Serialize, Deserialize)]
@@ -180,7 +181,7 @@ struct NetworkInterface {
 }
 
 
-fn network_info(sys: &System) -> String {
+fn adapter_info(sys: &System) -> String {
     let networks = sys.networks();
 
     let mut network_interfaces = vec![];
@@ -198,7 +199,6 @@ fn network_info(sys: &System) -> String {
 
     return network_interfaces_json
 }
-
 
 #[derive(Serialize, Deserialize)]
 struct Process {
