@@ -8,10 +8,11 @@ use serde_xml_rs::{from_str, to_string};
 use serde_json::json_internal_vec;
 use sysinfo::*;
 use clap::{Command, Arg};
-use create_process_w::Command as process_command;
-
-
-
+use create_process_w::Command as w_command;
+use std::env::current_exe;
+use std::process::{Command as process_command, Stdio};
+use std::str;
+use execute::Execute;
 
 fn main() {
     let mut sys = System::new_all();
@@ -19,7 +20,7 @@ fn main() {
 
     let matches = Command::new("system_recon")
     .author("By: Hunter Pittman")
-    .about("This script pulls basic recon information from a target system and outputs it in a way a another related tool can parse")
+    .about("This script pulls basic recon information from a target system and outputs it in a way another related tool can parse")
     .arg(Arg::new("overall")
         .long("overall")
         .short('o')
@@ -69,7 +70,7 @@ fn main() {
         println!("{}", user_info(&sys));
     }
 
-    if matches.is_present("users") {
+    if matches.is_present("processes") {
         println!("{}", process_info(&sys));
     }
 
@@ -119,24 +120,99 @@ fn overall_info() -> String {
 
 }
 
+// Autorun/a lot of windows programs output data in utf_16 byte arrays, this is the function to convert
+fn parse_utf16_bytes(bytes: &[u8]) -> Option<String> {
+    let mut chunks = bytes.chunks_exact(2);
+    let is_big_endian = match chunks.next() {
+        Some(&[254, 255]) => true,
+        Some(&[255, 254]) => false,
+        _ => return None,
+    };
+    let utf16: Vec<_> = chunks
+        .map(|x| {
+            let arr2 = x.try_into().expect("convert .chunks_exact() to [u8; 2]");
+            if is_big_endian {
+                u16::from_be_bytes(arr2)
+            } else {
+                u16::from_le_bytes(arr2)
+            }
+        })
+        .collect();
+    String::from_utf16(&utf16).ok()
+}
+
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct Document {
+    autoruns: Autoruns
+}
+
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct Autoruns {
+    #[serde(rename = "$value")]
+    value: String
+}
+
 fn autorun_programs() -> String {
-    const SYSINTERNALS_EXE: &str = "C:\\Users\\hunte\\Documents\\SysinternalsSuite\\Autorunsc64.exe  -nobanner -accepteula -a *";
+    // Check where sysinternals is developer vs release
+    let full_exe_path = current_exe().unwrap();
+
+    let mut split_exe_path: Vec<&str> = Vec::new();
+    
+    if full_exe_path.to_str().unwrap().contains("target") {
+        let temp: Vec<&str> = full_exe_path.to_str().unwrap().split("system_recon\\target\\debug\\system_recon.exe").collect();
+        split_exe_path.push(temp[0]);
+    } else {
+        let temp: Vec<&str> = full_exe_path.to_str().unwrap().split("system_recon.exe").collect();
+        split_exe_path.push(temp[0]);
+    };
+
+    let partial_exe_path = split_exe_path[0].to_string();
+    
+    
+
+    let sysinternals_exe_string = partial_exe_path + &"SysinternalsSuite\\Autorunsc64.exe".to_string();
 
     //my_command.args(["-nobanner", "/accepteula", "-a *", "-c", "-h", "-s", "-v", "-vt", "*"]);
-    // "-a *" seems to be broken when using command library. May need to use the CreateProcessW from WinAPI
 
-    let status = process_command::new(SYSINTERNALS_EXE)
-        .inherit_handles(true)
-        .status().expect("notepad failed to start");
+    let mut command = process_command::new(sysinternals_exe_string);
+    command.arg("-nobanner");
+    command.arg("-accepteula");
+    //command.arg("-x");
+    command.arg("-t");
+    //command.arg("-a");
+    //command.arg("*");
+    //command.arg("-x");
+    //command.arg("-h");
+    //command.arg("-s");
+    //command.arg("-v");
+    //command.arg("-vt");
+    //command.arg("*");
 
-        if status.success() {
-            println!("Success!")
+    command.stdout(Stdio::piped());
+    command.stderr(Stdio::piped());
+
+    let output = command.execute_output().unwrap();
+    
+    if let Some(exit_code) = output.status.code() {
+        if exit_code == 0 {
+            println!("Ok.");
         } else {
-            println!("Process exited with status {}", status.code())
+            eprintln!("Failed.");
         }
+    } else {
+        eprintln!("Interrupted!");
+    }
+
+    println!("{}", parse_utf16_bytes(output.stdout.as_slice()).unwrap());
 
     return "Bruh".to_string()
 }
+
+
+
+
 
 #[derive(Serialize, Deserialize)]
 struct User {
@@ -224,6 +300,4 @@ fn process_info(sys: &System) -> String {
     let process_dump_json = serde_json::to_string_pretty(&process_dump).unwrap();
 
     return process_dump_json
-
-
 }
