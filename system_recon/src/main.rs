@@ -53,27 +53,37 @@ fn main() {
         .required(false)
         .takes_value(false)
         .help("Dumps a list of processes on the system"))
+    .arg(Arg::new("sysmon")
+        .long("sysmon")
+        .short('s')
+        .required(false)
+        .takes_value(false)
+        .help("Configures sysmon on the system"))
     .get_matches();
 
 
     if  matches.is_present("overall") {
-        println!("{}", overall_info());
+        println!("{}", serde_json::to_string_pretty(&overall_info()).unwrap());
     } 
     
     if matches.is_present("autorun") {
-        println!("{:?}", autorun_programs());
+        println!("{:?}", serde_json::to_string_pretty(&autorun_programs()).unwrap());
     }
 
     if matches.is_present("network") {
-        println!("{}", adapter_info(&sys));
+        println!("{}", serde_json::to_string_pretty(&adapter_info(&sys)).unwrap());
     }
 
     if matches.is_present("users") {
-        println!("{}", user_info(&sys));
+        println!("{}", serde_json::to_string_pretty(&user_info(&sys)).unwrap());
     }
 
     if matches.is_present("processes") {
-        println!("{}", process_info(&sys));
+        println!("{}", serde_json::to_string_pretty(&process_info(&sys)).unwrap());
+    }
+
+    if matches.is_present("sysmon") {
+        println!("{}", serde_json::to_string_pretty(&configure_sysmon(&sys)).unwrap());
     }
 
 }
@@ -88,7 +98,7 @@ struct ComputerInfo {
 
 }
 
-fn overall_info() -> String {
+fn overall_info() -> ComputerInfo {
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion").unwrap();
     let active_computer_name = hklm.open_subkey("SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName").unwrap();
@@ -115,14 +125,11 @@ fn overall_info() -> String {
 
     };
 
-
-    let info_json = serde_json::to_string_pretty(&info).unwrap();
-
-    return info_json
+    return info
 
 }
 
-fn autorun_programs() -> String {
+fn autorun_programs() -> serde_json::Value {
     // Check where sysinternals is developer vs release
     let full_exe_path = current_exe().unwrap();
 
@@ -170,10 +177,8 @@ fn autorun_programs() -> String {
 
     let conf = Config::new_with_defaults();
     let json = xml_string_to_json(xml_data.to_owned(), &conf);
-    
-    let xml_dump = serde_json::to_string_pretty(&json.unwrap()).unwrap();
 
-    return xml_dump
+    return json.unwrap()
 }
 
 
@@ -186,7 +191,7 @@ struct User {
 }
 
 
-fn user_info(sys: &System) -> String {
+fn user_info(sys: &System) -> std::vec::Vec<User> {
 
     let mut users = vec![];
 
@@ -201,9 +206,7 @@ fn user_info(sys: &System) -> String {
         users.push(value);
     }
 
-    let users_json = serde_json::to_string_pretty(&users).unwrap();
-
-    return users_json
+    return users
 
 }
 
@@ -214,7 +217,7 @@ struct NetworkInterface {
 }
 
 
-fn adapter_info(sys: &System) -> String {
+fn adapter_info(sys: &System) -> std::vec::Vec<NetworkInterface> {
     let networks = sys.networks();
 
     let mut network_interfaces = vec![];
@@ -228,9 +231,7 @@ fn adapter_info(sys: &System) -> String {
         network_interfaces.push(value);
     }
 
-    let network_interfaces_json = serde_json::to_string_pretty(&network_interfaces).unwrap();
-
-    return network_interfaces_json
+    return network_interfaces
 }
 
 #[derive(Serialize, Deserialize)]
@@ -242,7 +243,7 @@ struct Process {
 
 }
 
-fn process_info(sys: &System) -> String {
+fn process_info(sys: &System) -> std::vec::Vec<Process> {
     let processes = sys.processes();
 
     let mut process_dump = vec![];
@@ -260,7 +261,9 @@ fn process_info(sys: &System) -> String {
         process_dump.push(value);
     }
 
-    let process_dump_json = serde_json::to_string_pretty(&process_dump).unwrap();
+    return process_dump
+}
 
-    return process_dump_json
+fn configure_sysmon(sys: &System) -> String {
+    return "bruh".to_string()
 }
