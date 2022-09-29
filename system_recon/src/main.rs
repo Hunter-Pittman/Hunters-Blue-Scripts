@@ -9,6 +9,7 @@ use std::process::{Command as process_command, Stdio};
 use std::str;
 use execute::Execute;
 use quickxml_to_serde::{xml_string_to_json, Config};
+//use winapi::um::winsvc::{GetServiceDisplayNameA};
 
 
 
@@ -149,14 +150,13 @@ fn autorun_programs() -> serde_json::Value {
     let mut command = process_command::new(sysinternals_exe_string);
     command.arg("-nobanner");
     command.arg("-accepteula");
-    command.arg("-x");
+    command.arg("-u");
+    command.arg("-v"); // Query VirusTotal for malware based on file hash. Add 'r' to open reports for files with non-zero detection. Files reported as not previously scanned will be uploaded to VirusTotal if the 's' option is specified. Note scan results may not be available for five or more minutes.
+    command.arg("-vt"); // Before using VirusTotal features, you must accept the VirusTotal terms of service. If you haven't accepted the terms and you omit this option, you will be interactively prompted.
+    command.arg("-x"); // Specifies xml format
     command.arg("-a");
-    command.arg("*");
-    command.arg("-h");
-    command.arg("-s");
-    command.arg("-v");
-    command.arg("-vt");
-    command.arg("*");
+    command.arg("tbmshl");
+    command.arg("*"); //
 
     command.stdout(Stdio::piped());
     command.stderr(Stdio::piped());
@@ -216,7 +216,6 @@ struct NetworkInterface {
     total_transmitted_packets: u64
 }
 
-
 fn adapter_info(sys: &System) -> std::vec::Vec<NetworkInterface> {
     let networks = sys.networks();
 
@@ -265,5 +264,16 @@ fn process_info(sys: &System) -> std::vec::Vec<Process> {
 }
 
 fn configure_sysmon(sys: &System) -> String {
+    let processes = process_info(sys);
+
+
+    
+    
+    return "bruh".to_string()
+}
+
+fn settings_set() -> String {
+    
+
     return "bruh".to_string()
 }
